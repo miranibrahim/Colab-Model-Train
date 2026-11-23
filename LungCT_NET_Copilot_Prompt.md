@@ -7,7 +7,7 @@ Review my existing lung cancer classification project and create a **new, separa
 Use the paper details I provided for **“LungCT-NET: An explainable transfer learning-based robust ensemble model for lung cancer diagnosis”** as the methodological reference, but adapt the implementation to my existing dataset and project.
 
 ## 1. My dataset — important
-DATASET_ROOT = "/content/drive/MyDrive/Dataset/Lung_Cancer_Preprocessed Dataset"
+DATASET_ROOT = "/content/drive/MyDrive/Dataset/Lung_Cancer_Preprocessed_Dataset"
 My dataset is **already preprocessed, split, and augmented**. Do not repeat preprocessing, splitting, or augmentation.
 
 Use the existing `train`, `validation`, and `test` folders and preserve their contents.
