@@ -1,122 +1,388 @@
-# GitHub Copilot Prompt: Implement a LungCT-NET-Inspired 3-Class Model
+# Task: Create a Parameterized Proposed Deep Learning Model Notebook for Lung Cancer Classification
 
-Review my existing lung cancer classification project and create a **new, separate Jupyter notebook** named:
+Act as a Senior Deep Learning Research Engineer and Python/TensorFlow Expert. I am working on a Lung Cancer Classification research project using Google Colab. I want to modify the Swin Transformer architecture, ResNet, MovileNetV2 and experiment with different configurations to develop my own proposed model.
 
-`LungCT_NET_Three_Class_Classification.ipynb`
+I am still learning Deep Learning, so I need clean, beginner-friendly, well-commented, and modular code.
 
-Use the paper details I provided for **“LungCT-NET: An explainable transfer learning-based robust ensemble model for lung cancer diagnosis”** as the methodological reference, but adapt the implementation to my existing dataset and project.
+Your task is to create a complete, executable **Google Colab Jupyter Notebook (.ipynb)** for my experiments.
 
-## 1. My dataset — important
-DATASET_ROOT = "/content/drive/MyDrive/Dataset/Lung_Cancer_Preprocessed_Dataset"
-My dataset is **already preprocessed, split, and augmented**. Do not repeat preprocessing, splitting, or augmentation.
+## 1. Main Objective
 
-Use the existing `train`, `validation`, and `test` folders and preserve their contents.
+I want to experiment with a proposed model based on Swin Transformer, ResNet, MobileNet, EfficientNet and investigate whether using Categorical Cross-Entropy or other configurable loss functions can improve classification accuracy and other evaluation metrics.
 
-| Class | Train | Validation | Test |
-|---|---:|---:|---:|
-| Benign | 735 | 70 | 71 |
-| Malignant | 735 | 157 | 158 |
-| Normal | 735 | 62 | 63 |
-| **Total** | **2,205** | **289** | **292** |
+Important:
+- Do not assume that adding Cross-Entropy will automatically improve accuracy.
+- Help me design a proper experimental setup to compare different configurations.
+- Keep the architecture flexible so I can modify its components and parameters later.
+- Avoid unnecessarily complicated code.
 
-Before training, inspect the actual folder structure and verify these counts. If the observed counts differ, report the difference instead of silently changing the dataset.
+## 2. Centralized Configuration Section
 
-This is a **three-class classification problem: Benign, Malignant, and Normal**. The paper's binary labels (Benign/Malignant) must therefore be adapted. Do not discard or merge the Normal class.
+At the beginning of the notebook, create a dedicated configuration cell where I can easily change all important parameters without modifying the main implementation.
 
-## 2. Model architecture
+### Model Selection
 
-Implement the four transfer-learning models used in the paper's final ensemble:
+```python
+MODEL_NAMES = [
+    "ResNet50",
+    "EfficientNetB0",
+    "MobileNetV2",
+    "DenseNet121",
+    "SwinTransformer"
+]
 
-- VGG16
-- VGG19
-- MobileNetV2
-- EfficientNetB0
+# Example:
+# MODEL_NAMES = ["SwinTransformer"]
+# MODEL_NAMES = ["ResNet50", "SwinTransformer"]
+```
 
-Use ImageNet pretrained weights, remove the original classification head, and initially freeze the convolutional base.
+I should be able to train one or multiple models using the same configuration.
 
-Use the paper's described classification heads where appropriate:
-- VGG16/VGG19: Flatten → Dense(4096, ReLU) → Dropout(0.5) → Dense(4096, ReLU) → Dropout(0.5) → Dense(3, softmax).
-- MobileNetV2/EfficientNetB0: GlobalAveragePooling2D → Dense(128, ReLU) → Dense(3, softmax).
+### Training Parameters
 
-Make the output layer suitable for three classes. Keep architecture settings configurable and explain any practical adjustment needed for GPU memory.
+Keep all parameters in one place.
 
-Check each architecture's required preprocessing. Keep the dataset split and labels consistent across models.
+```python
+IMAGE_SIZE = (224, 224)
+BATCH_SIZE = 32
+EPOCHS = 50
+LEARNING_RATE = 1e-4
+SEED = 42
 
-## 3. Training
+EARLY_STOPPING_PATIENCE = 7
+REDUCE_LR_PATIENCE = 3
+REDUCE_LR_FACTOR = 0.5
+MIN_LEARNING_RATE = 1e-7
+```
 
-- Use categorical or sparse categorical cross-entropy according to the label format.
-- Use Adam (or explain any justified alternative).
-- Train for up to 100 epochs, with configurable batch size and learning rate.
-- Use validation-based EarlyStopping and ModelCheckpoint.
-- Save the best checkpoint for each model.
-- Record training/validation loss, accuracy, learning rate, and training time.
-- Set random seeds and enable deterministic operations where supported.
-- Record library versions, configuration, and limitations to exact reproducibility.
+Add beginner-friendly comments with suggested alternative values.
 
-Do not use the test set for training, model selection, or hyperparameter tuning.
+For example:
 
-## 4. Stacking ensemble — avoid data leakage
+```python
+LEARNING_RATE = 1e-4
+# Suggested values to experiment with:
+# 1e-3, 5e-4, 1e-4, 5e-5, 1e-5
+```
 
-Build a stacking ensemble using the four CNNs' **three-class probability outputs**.
+### Loss Function Configuration
 
-Use:
-- Decision Tree
-- Random Forest
-- Extra Trees
-- Logistic Regression as the final meta-classifier
+Create a separate configuration section for loss functions.
 
-Important: generate training features using **out-of-fold (OOF) predictions** from the training set, not predictions from CNNs on the same samples they were trained on. This prevents leakage into the stacking classifiers.
+I want to experiment with:
 
-Fit the base tree classifiers on the OOF features, and train the Logistic Regression meta-classifier using appropriate cross-validated predictions from the base classifiers. Keep validation and test data out of fitting. Explain the stacking process clearly.
+- Categorical Cross-Entropy
+- Sparse Categorical Cross-Entropy
+- Categorical Cross-Entropy with Label Smoothing
+- Other relevant loss functions if appropriate for this classification problem.
 
-If the paper's exact stacking procedure cannot be reproduced from the available details, clearly state the implementation choice rather than claiming it is identical to the paper.
+Example:
 
-## 5. Evaluation and visualizations
+```python
+LOSS_FUNCTION_NAME = "categorical_crossentropy"
 
-Evaluate each CNN and the final ensemble on the untouched test set.
+LABEL_SMOOTHING = 0.0
+# Suggested values: 0.0, 0.05, 0.1, 0.15
+```
 
-Report:
-- Accuracy
-- Macro and weighted precision, recall, and F1-score
-- Per-class precision, recall, and F1-score
-- Confusion matrix
-- One-vs-rest ROC curves and macro/micro ROC-AUC
-- Precision-Recall curves and average precision
-- Specificity for each class (one-vs-rest)
+Keep loss-specific parameters separate and explain what each parameter does.
 
-Create clear, labeled graphs for:
-- Training vs validation accuracy
-- Training vs validation loss
-- Learning rate over epochs, if recorded
-- Confusion matrix
-- Multiclass ROC curves
-- Precision-Recall curves
-- Model metric comparison
-- Training time comparison
+Ensure the loss function is compatible with the dataset labels and model output format.
 
-Explain briefly how to interpret each graph, including signs of overfitting and underfitting. Do not use binary-only evaluation for this three-class task.
+### Proposed Swin Transformer Configuration
 
-## 6. Explainability
+Create a separate section for Swin Transformer architecture parameters.
 
-Add an optional, clearly separated explainability section:
-- Generate Grad-CAM heatmaps for representative test images for the CNN models.
-- If SHAP is practical, explain and implement an appropriate multiclass approach for CNN predictions and the stacking model.
-- Do not claim that SHAP/Grad-CAM proves clinical validity. Clearly describe limitations.
+For example:
 
-## 7. Results and notebook quality
+```python
+SWIN_CONFIG = {
+    "patch_size": 4,
+    "window_size": 7,
+    "embed_dim": 96,
+    "num_heads": [3, 6, 12, 24],
+    "depths": [2, 2, 6, 2],
+    "mlp_ratio": 4.0,
+    "dropout_rate": 0.1,
+    "attention_dropout_rate": 0.0,
+    "drop_path_rate": 0.1
+}
+```
 
-Save models, histories, metrics, predictions, plots, and experiment configuration in a timestamped results folder so previous runs are not overwritten.
+These values should be configurable, with simple explanations and suggested alternatives.
 
-Keep the notebook beginner-friendly:
-- Use clear Markdown headings and short explanations.
-- Break work into small, logical cells.
-- Add useful comments without over-commenting.
-- Avoid huge code cells and unnecessary abstractions.
-- Make it executable from top to bottom.
-- Explain important outputs in simple English.
+Important:
+- Do not use a nonexistent API such as `keras_hub.models.SwinTransformerImageClassifier`.
+- First verify which Swin Transformer implementation is actually supported by the selected library and its version.
+- If necessary, implement a lightweight modular Swin Transformer architecture using TensorFlow/Keras components.
+- Clearly distinguish between the original Swin Transformer and my modified/proposed version.
+- Keep the architecture easy to modify, especially the attention mechanism, feature extraction, classification head, and loss function.
 
-## Before writing code
+## 3. Google Colab Environment Setup
 
-First inspect my existing project to identify the framework, dataset paths, folder naming, image format, label encoding, and current environment. Reuse the actual paths and compatible code. Do not invent paths or silently alter my dataset.
+The notebook must be designed specifically for Google Colab.
 
-Create the new notebook only. Do not overwrite my existing notebooks or dataset. At the end, provide a short summary of the notebook, assumptions, and any issues I need to check before running a full training session.
+Include:
+
+1. Google Drive mounting.
+2. Dataset path configuration.
+3. Required library installation.
+4. TensorFlow and GPU verification.
+5. Random seed configuration.
+6. Output directory creation.
+
+Use my existing project paths where applicable:
+
+```python
+DATASET_ROOT = "/content/drive/MyDrive/Dataset/Lung_Cancer_Preprocessed Dataset"
+
+MODELS_DIR = "/content/drive/MyDrive/Lung_Cancer_Trained_Models"
+
+CHECKPOINTS_DIR = "/content/drive/MyDrive/Lung_Cancer_Checkpoints"
+```
+
+Make paths configurable from the central configuration section.
+
+Do not assume the dataset folder structure without checking it. Include a dataset inspection step and clearly explain how the notebook expects training, validation, and test data to be organized.
+
+If the existing dataset is already split, reuse it rather than splitting it again.
+
+## 4. Dataset Loading and Preprocessing
+
+Create reusable functions for:
+
+- Loading training data.
+- Loading validation data.
+- Loading test data.
+- Resizing images.
+- Normalization or model-specific preprocessing.
+- Batching and prefetching.
+
+Important:
+- Prevent data leakage between training, validation, and test sets.
+- Do not apply random augmentation to validation or test data.
+- Ensure preprocessing is appropriate for each selected architecture.
+- Handle class labels consistently across all models.
+- Check class distribution and display a simple visualization.
+
+## 5. Modular Model Architecture
+
+Create a clean `build_model(model_name)` function.
+
+It should support:
+
+```python
+MODEL_NAMES = [
+    "ResNet50",
+    "EfficientNetB0",
+    "MobileNetV2",
+    "DenseNet121",
+    "SwinTransformer"
+]
+```
+
+Use transfer learning for CNN architectures where appropriate.
+
+For Swin Transformer, implement or use a verified compatible architecture.
+
+For my proposed model, keep the following components modular:
+
+1. Patch Embedding.
+2. Window-based Multi-Head Self-Attention.
+3. Shifted Window Attention.
+4. MLP block.
+5. Patch Merging.
+6. Classification Head.
+
+I want to experiment with modifications in these components in the future.
+
+Keep the architecture parameterized instead of hardcoding values throughout the implementation.
+
+## 6. Proposed Model Experimentation
+
+I specifically want to experiment with loss functions and Swin Transformer modifications.
+
+Make it easy to modify:
+
+- Loss function.
+- Learning rate.
+- Optimizer.
+- Weight decay.
+- Dropout.
+- Label smoothing.
+- Number of attention heads.
+- Window size.
+- Embedding dimension.
+- Transformer depths.
+- Classification head configuration.
+
+Keep all these values in centralized configuration dictionaries.
+
+Use a simple and consistent coding pattern.
+
+Avoid unnecessary abstraction and excessive classes.
+
+## 7. Model Training
+
+Create a reusable training loop.
+
+Example:
+
+```python
+trained_models = {}
+trained_histories = {}
+training_seconds = {}
+checkpoint_paths = {}
+
+for model_name in MODEL_NAMES:
+    # Build model
+    # Compile model
+    # Train model
+    # Save best checkpoint
+    # Restore best weights
+    # Store training history
+```
+
+Requirements:
+
+- EarlyStopping.
+- ModelCheckpoint.
+- ReduceLROnPlateau.
+- Configurable optimizer and loss function.
+- Track training time.
+- Save best weights.
+- Restore best validation-loss weights before evaluation.
+- Handle multiple models sequentially to avoid unnecessary GPU memory consumption.
+- Clear the TensorFlow session when appropriate.
+- Keep training logs understandable.
+
+## 8. Evaluation and Comparison
+
+Evaluate every trained model using the same test dataset.
+
+Calculate:
+
+- Accuracy.
+- Precision.
+- Recall.
+- F1-score.
+- Macro F1-score.
+- Confusion Matrix.
+- Classification Report.
+- ROC-AUC, if applicable.
+
+Generate:
+
+1. Training vs Validation Accuracy graph.
+2. Training vs Validation Loss graph.
+3. Confusion Matrix for each model.
+4. Model Comparison Table.
+5. Training Time Comparison.
+6. Accuracy and Macro F1 Comparison Graph.
+
+Save evaluation results and graphs to Google Drive.
+
+Use Macro F1 as an important metric, especially if the dataset is imbalanced.
+
+## 9. Experiment Tracking
+
+I want to compare different configurations of the proposed model.
+
+Create a simple CSV experiment log containing:
+
+- Experiment ID.
+- Model Name.
+- Loss Function.
+- Learning Rate.
+- Optimizer.
+- Batch Size.
+- Epochs.
+- Important Swin Transformer parameters.
+- Best Validation Accuracy.
+- Best Validation Loss.
+- Test Accuracy.
+- Test Macro F1.
+- Training Time.
+
+This will help me identify which configuration performs best.
+
+## 10. Notebook Structure
+
+Organize the notebook into clearly separated sections.
+
+Use this order:
+
+1. Project Overview and Experiment Objective.
+2. Google Colab Environment Setup.
+3. Centralized Configuration.
+4. Dataset Path and Structure Inspection.
+5. Dataset Loading and Preprocessing.
+6. Data Visualization and Class Distribution.
+7. Model Architecture Implementation.
+8. Loss Function and Optimizer Configuration.
+9. Model Building and Summary.
+10. Model Training.
+11. Model Evaluation.
+12. Performance Visualization.
+13. Experiment Comparison.
+14. Save Results and Final Models.
+15. Future Experimentation Guide.
+
+Every section should have a Markdown explanation before its code cells.
+
+## 11. Coding Guidelines
+
+Follow these rules strictly:
+
+- Use TensorFlow/Keras consistently.
+- Keep code beginner-friendly.
+- Use short, meaningful variable and function names.
+- Add simple English comments explaining what each important part does.
+- Avoid unnecessarily long functions.
+- Avoid duplicated code.
+- Keep configurable values in one place.
+- Use modular architecture.
+- Avoid unnecessary external dependencies.
+- Ensure all cells run in the correct order in Google Colab.
+- Do not leave incomplete code or placeholder functions.
+- Verify library APIs before using them.
+- Handle common runtime errors where reasonable.
+- Do not silently ignore errors.
+
+## 12. Research and Experimental Integrity
+
+This is an academic research project, so experimental reliability is important.
+
+Please ensure:
+
+- All models use the same train/validation/test split.
+- All models use consistent evaluation metrics.
+- Test data is not used for hyperparameter tuning.
+- Random seeds are controlled.
+- The best checkpoint is selected using validation loss.
+- Class imbalance is considered.
+- Clearly explain that changing the loss function alone does not guarantee accuracy improvement.
+- Do not make fabricated performance claims.
+- Do not call the architecture novel or research-proven without evidence.
+
+Also, explain how I can perform a fair baseline vs proposed model comparison.
+
+## 13. Final Deliverable
+
+I do not want only code snippets or instructions.
+
+**Generate a complete downloadable `.ipynb` notebook file** that I can directly upload and run in Google Colab.
+
+Before finalizing:
+
+1. Check the code for syntax errors.
+2. Verify TensorFlow/Keras API compatibility.
+3. Ensure the model configurations are consistent.
+4. Ensure the training and evaluation functions work with multiple selected models.
+5. Ensure the notebook is logically organized and executable from top to bottom.
+6. Ensure the coding is suitable for google colab. no need to install any library as colab has all the support. 
+7. Show all the performance and learning graph in a collage mode.
+
+If any required dataset information is missing, make the notebook inspect the dataset and clearly explain which configuration I need to update.
+
+The final notebook should be easy enough for a beginner to understand but structured well enough for serious academic experimentation.
